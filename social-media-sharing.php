@@ -25,53 +25,58 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+define('TWITTER_HANDLE', '@YOUR_TWITTER_HANDLE');
+define('DEFAULT_SOCIAL_MEDIA_DESCRIPTION', 'DEFAULT DESCRIPTION');
+define('DEFAULT_SOCIAL_MEDIA_IMAGE', get_bloginfo('stylesheet_directory').'/images/DEFAULT_IMAGE.jpg' );
+
 add_image_size( 'facebook-thumbnail', 300, 300);
 
-function get_facebook_opengraph($post_id) {
-    if (has_post_thumbnail($post_id)) { 
-        $thumbnail = simplexml_load_string(get_the_post_thumbnail($post_id,'facebook-thumbnail'));
+function get_facebook_opengraph() {
+    global $post;
+    if (has_post_thumbnail($post->ID)) { 
+        $thumbnail = simplexml_load_string(get_the_post_thumbnail($post->ID,'facebook-thumbnail'));
         $thumbnail_url = $thumbnail->attributes()->src;
     ?>
     <?php } else { ?>
-    <meta property="og:image" content="<?php echo get_bloginfo('stylesheet_directory');  ?>/images/DEFAULT_IMAGE.jpg" />
+    <meta property="og:image" content="<?php echo DEFAULT_SOCIAL_MEDIA_IMAGE;  ?>" />
     <?php } ?>
-    <meta property="og:url" content="<?php echo get_permalink($post_id); ?>" />
+    <meta property="og:url" content="<?php echo get_permalink(); ?>" />
     <meta property="og:site_name" content="<?php echo site_url(); ?>" />
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="<?php echo get_the_title($post_id); ?>" />
+    <meta property="og:title" content="<?php echo get_the_title(); ?>" />
     <?php if (is_single() || is_page()) { ?>
-    <meta property="og:description" content="<?php echo get_socialmedia_excerpt_by_id($post_id, 35); ?>" />
+    <meta property="og:description" content="<?php echo get_socialmedia_excerpt(35); ?>" />
+    <?php } else { ?>
+    <meta property="og:description" content="<?php echo DEFAULT_SOCIAL_MEDIA_DESCRIPTION ?>" />
     <?php }
 }
 
-function get_twitter_card_meta($post_id) { ?>
+function get_twitter_card_meta() { ?>
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:site" content="@YOUR_TWITTER_USER" />
-    <meta name="twitter:creator" content="@YOUR_TWITTER_USER" />
-    <meta name="twitter:url" content="<?php echo get_permalink($post_id); ?>" />
-    <meta name="twitter:title" content="<?php echo get_the_title($post_id); ?>" />
+    <meta name="twitter:site" content="<?php echo TWITTER_HANDLE ?>" />
+    <meta name="twitter:creator" content="<?php echo TWITTER_HANDLE ?>" />
+    <meta name="twitter:url" content="<?php echo get_permalink(); ?>" />
+    <meta name="twitter:title" content="<?php echo get_the_title(); ?>" />
     <?php if (is_single() || is_page()) { ?>
-    <meta name="twitter:description" content="<?php echo get_socialmedia_excerpt_by_id($post_id,25); ?>" />
-    <?php }
-    else { ?>
-    <meta name="twitter:description" content="Inspiring Austin" />  
+    <meta name="twitter:description" content="<?php echo get_socialmedia_excerpt(25); ?>" />
+    <?php } else { ?>
+    <meta name="twitter:description" content="<?php echo DEFAULT_SOCIAL_MEDIA_DESCRIPTION ?>" />  
     <?php }
 }
 
-function get_socialmedia_excerpt_by_id($post_id, $excerpt_length = '20'){
-    $the_post = get_post($post_id); //Gets post ID
-    $the_excerpt = $the_post->post_content; //Gets post_content to be used as a basis for the excerpt
+function get_socialmedia_excerpt($excerpt_length = '20'){
+    global $post;
+    $the_excerpt = $post->post_content; //Gets post_content to be used as a basis for the excerpt
     $the_excerpt = strip_tags(strip_shortcodes($the_excerpt)); //Strips tags and images
     $words = explode(' ', $the_excerpt, $excerpt_length + 1);
     if(count($words) > $excerpt_length) :
-    array_pop($words);
-    array_push($words, '…');
-    $the_excerpt = implode(' ', $words);
+        array_pop($words);
+        array_push($words, '…');
+        $the_excerpt = implode(' ', $words);
     endif;
-    //no p tags needed $the_excerpt = '<p>' . $the_excerpt . '</p>';
     // remove any quotes
-    $the_excerpt = str_replace('"',"",$the_excerpt);
-    if ($the_excerpt == "") $the_excerpt = "KLRU-TV, Austin PBS. Inspring Austin"; 
+    $the_excerpt = str_replace('"','',$the_excerpt);
+    if ($the_excerpt == '') $the_excerpt = "DEFAULT MESSAGE"; 
     return $the_excerpt;
 }
 
@@ -80,6 +85,6 @@ add_action( 'wp_head', 'social_media_sharing_head_action');
 function social_media_sharing_head_action() {
     global $post;
 
-    get_facebook_opengraph($post->ID);
-    get_twitter_card_meta($post->ID);
+    get_facebook_opengraph();
+    get_twitter_card_meta();
 }
