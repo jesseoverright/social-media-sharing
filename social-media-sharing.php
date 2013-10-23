@@ -33,50 +33,50 @@ add_image_size( 'facebook-thumbnail', 300, 300);
 
 function get_facebook_opengraph() {
     global $post;
-    if (has_post_thumbnail($post->ID)) { 
-        $thumbnail = simplexml_load_string(get_the_post_thumbnail($post->ID,'facebook-thumbnail'));
-        $thumbnail_url = $thumbnail->attributes()->src;
+    
+    if ( has_post_thumbnail($post->ID) ) { 
+        $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID,'facebook-thumbnail') );
+        $og_image = $thumbnail[0];
+    } else {
+        $og_image = DEFAULT_SOCIAL_MEDIA_IMAGE;
+    }
+
     ?>
-    <?php } else { ?>
-    <meta property="og:image" content="<?php echo DEFAULT_SOCIAL_MEDIA_IMAGE;  ?>" />
-    <?php } ?>
-    <meta property="og:url" content="<?php echo get_permalink(); ?>" />
-    <meta property="og:site_name" content="<?php echo site_url(); ?>" />
+    <meta property="og:image" content="<?= $og_image ?>" />
+    <meta property="og:url" content="<?= get_permalink() ?>" />
+    <meta property="og:site_name" content="<?= site_url() ?>" />
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="<?php echo get_the_title(); ?>" />
-    <?php if (is_single() || is_page()) { ?>
-    <meta property="og:description" content="<?php echo get_socialmedia_excerpt(35); ?>" />
-    <?php } else { ?>
-    <meta property="og:description" content="<?php echo DEFAULT_SOCIAL_MEDIA_DESCRIPTION ?>" />
-    <?php }
+    <meta property="og:title" content="<?= get_the_title() ?>" />
+    <meta property="og:description" content="<?= get_socialmedia_excerpt(35) ?>" />
+    <?php
 }
 
 function get_twitter_card_meta() { ?>
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:site" content="<?php echo TWITTER_HANDLE ?>" />
-    <meta name="twitter:creator" content="<?php echo TWITTER_HANDLE ?>" />
-    <meta name="twitter:url" content="<?php echo get_permalink(); ?>" />
-    <meta name="twitter:title" content="<?php echo get_the_title(); ?>" />
-    <?php if (is_single() || is_page()) { ?>
-    <meta name="twitter:description" content="<?php echo get_socialmedia_excerpt(25); ?>" />
-    <?php } else { ?>
-    <meta name="twitter:description" content="<?php echo DEFAULT_SOCIAL_MEDIA_DESCRIPTION ?>" />  
-    <?php }
+    <meta name="twitter:site" content="<?= TWITTER_HANDLE ?>" />
+    <meta name="twitter:creator" content="<?= TWITTER_HANDLE ?>" />
+    <meta name="twitter:url" content="<?= get_permalink() ?>" />
+    <meta name="twitter:title" content="<?= get_the_title() ?>" />
+    <meta name="twitter:description" content="<?= get_socialmedia_excerpt(25) ?>" />
+    <?php
 }
 
 function get_socialmedia_excerpt($excerpt_length = '20'){
-    global $post;
-    $the_excerpt = $post->post_content; //Gets post_content to be used as a basis for the excerpt
-    $the_excerpt = strip_tags(strip_shortcodes($the_excerpt)); //Strips tags and images
-    $words = explode(' ', $the_excerpt, $excerpt_length + 1);
-    if(count($words) > $excerpt_length) :
-        array_pop($words);
-        array_push($words, '…');
-        $the_excerpt = implode(' ', $words);
-    endif;
-    // remove any quotes
-    $the_excerpt = str_replace('"','',$the_excerpt);
-    if ($the_excerpt == '') $the_excerpt = "DEFAULT MESSAGE"; 
+    if ( is_single() || is_page() ) {
+        global $post;
+        $the_excerpt = $post->post_content; //Gets post_content to be used as a basis for the excerpt
+        $the_excerpt = strip_tags(strip_shortcodes($the_excerpt)); //Strips tags and images
+        $words = explode(' ', $the_excerpt, $excerpt_length + 1);
+        if(count($words) > $excerpt_length) :
+            array_pop($words);
+            array_push($words, '…');
+            $the_excerpt = implode(' ', $words);
+        endif;
+        // remove any quotes
+        $the_excerpt = str_replace('"','',$the_excerpt);
+    }
+    
+    if ($the_excerpt == '') $the_excerpt = DEFAULT_SOCIAL_MEDIA_DESCRIPTION; 
     return $the_excerpt;
 }
 
