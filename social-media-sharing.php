@@ -3,7 +3,7 @@
  * Plugin Name: Social Media Sharing
  * Plugin URI: http://about.me/joverright
  * Description: Adds Facebook OpenGraph and Twitter Card support to your website.
- * Version: 0.5 beta
+ * Version: 0.9 beta
  * Author: Jesse Overright
  * Author URI: http://about.me/joverright
  * License: GPL2
@@ -41,9 +41,7 @@ class Social_Media_Sharing {
     }
 
     protected function __construct() {
-        # define defaults
-        define('DEFAULT_SOCIAL_MEDIA_IMAGE', get_bloginfo('stylesheet_directory').'/images/DEFAULT_IMAGE.jpg' );
-
+        
         # set up facebook thumbnail size
         add_image_size( 'facebook-thumbnail', 300, 300);
 
@@ -59,24 +57,27 @@ class Social_Media_Sharing {
         global $post;
 
         $thumbnail = wp_get_attachment_image_src( get_option( 'social_media_sharing_default_image_id'), 'facebook-thumbnail');
-        $og_image = $thumbnail[0];
+        $title = (wp_title( '|', false, 'right') != '') ? wp_title( '|', false, 'right') : get_bloginfo('name');
 
         if ( is_single() || is_page()) {
             if ( has_post_thumbnail($post->ID) ) { 
                 $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID,'facebook-thumbnail') );
-                $og_image = $thumbnail[0];
             }
 
             $settings =  array (
-                'url'   => get_permalink(),
-                'title' => wp_title( '|', false, 'right'),
-                'image' => $og_image,
+                'url'    => get_permalink(),
+                'title'  => $title,
+                'image'  => $thumbnail[0],
+                'width'  => $thumbnail[1],
+                'height' => $thumbnail[2]
             );
         } else {
             $settings = array (
-                'url'   => $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
-                'title' => wp_title( '|', false, 'right'),
-                'image' => $og_image,
+                'url'    => $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
+                'title'  => $title,
+                'image'  => $thumbnail[0],
+                'width'  => $thumbnail[1],
+                'height' => $thumbnail[2]
             );
         }
 
@@ -158,8 +159,12 @@ class Social_Media_Sharing {
         <?php
     }
 
-    protected function get_facebook_opengraph($settings) { ?>
+    protected function get_facebook_opengraph($settings) { 
+        if ($settings['image'] != '') : ?>
         <meta property="og:image" content="<?= $settings['image'] ?>" />
+        <meta property="og:image:width" content="<?= $settings['width'] ?>" />
+        <meta property="og:image:height" content="<?= $settings['height'] ?>" />
+        <?php endif ?>
         <meta property="og:url" content="<?= $settings['url'] ?>" />
         <meta property="og:site_name" content="<?= site_url() ?>" />
         <meta property="og:type" content="article" />
@@ -196,6 +201,7 @@ class Social_Media_Sharing {
         }
         
         if ($the_excerpt == '') $the_excerpt = get_option( 'social_media_sharing_default_description' );
+        if ($the_excerpt == '') $the_excerpt = get_bloginfo( 'description' );
         return $the_excerpt;
     }
 }
