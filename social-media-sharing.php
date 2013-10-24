@@ -31,32 +31,52 @@ define('DEFAULT_SOCIAL_MEDIA_IMAGE', get_bloginfo('stylesheet_directory').'/imag
 
 add_image_size( 'facebook-thumbnail', 300, 300);
 
-function get_facebook_opengraph() {
+add_action( 'wp_head', 'social_media_sharing_init');
+
+function social_media_sharing_init() {
     global $post;
-    
-    if ( has_post_thumbnail($post->ID) ) { 
-        $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID,'facebook-thumbnail') );
-        $og_image = $thumbnail[0];
+
+    if ( is_single() || is_page()) {
+        if ( has_post_thumbnail($post->ID) ) { 
+            $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID,'facebook-thumbnail') );
+            $og_image = $thumbnail[0];
+        } else {
+            $og_image = DEFAULT_SOCIAL_MEDIA_IMAGE;
+        }
+
+        $settings =  array (
+            'url'   => get_permalink(),
+            'title' => wp_title( '|', false, 'right'),
+            'image' => $og_image,
+        );
     } else {
-        $og_image = DEFAULT_SOCIAL_MEDIA_IMAGE;
+        $settings = array (
+            'url'   => $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
+            'title' => wp_title( '|', false, 'right'),
+            'image' => DEFAULT_SOCIAL_MEDIA_IMAGE,
+        );
     }
 
-    ?>
-    <meta property="og:image" content="<?= $og_image ?>" />
-    <meta property="og:url" content="<?= get_permalink() ?>" />
+    get_facebook_opengraph($settings);
+    get_twitter_card_meta($settings);
+}
+
+function get_facebook_opengraph($settings) { ?>
+    <meta property="og:image" content="<?= $settings['image'] ?>" />
+    <meta property="og:url" content="<?= $settings['url'] ?>" />
     <meta property="og:site_name" content="<?= site_url() ?>" />
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="<?= get_the_title() ?>" />
+    <meta property="og:title" content="<?= $settings['title'] ?>" />
     <meta property="og:description" content="<?= get_socialmedia_excerpt(35) ?>" />
     <?php
 }
 
-function get_twitter_card_meta() { ?>
+function get_twitter_card_meta($settings) { ?>
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="<?= TWITTER_HANDLE ?>" />
     <meta name="twitter:creator" content="<?= TWITTER_HANDLE ?>" />
-    <meta name="twitter:url" content="<?= get_permalink() ?>" />
-    <meta name="twitter:title" content="<?= get_the_title() ?>" />
+    <meta name="twitter:url" content="<?= $settings['url'] ?>" />
+    <meta name="twitter:title" content="<?= $settings['title'] ?>" />
     <meta name="twitter:description" content="<?= get_socialmedia_excerpt(25) ?>" />
     <?php
 }
@@ -78,13 +98,4 @@ function get_socialmedia_excerpt($excerpt_length = '20'){
     
     if ($the_excerpt == '') $the_excerpt = DEFAULT_SOCIAL_MEDIA_DESCRIPTION; 
     return $the_excerpt;
-}
-
-add_action( 'wp_head', 'social_media_sharing_head_action');
-
-function social_media_sharing_head_action() {
-    global $post;
-
-    get_facebook_opengraph();
-    get_twitter_card_meta();
 }
