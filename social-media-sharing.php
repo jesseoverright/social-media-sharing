@@ -51,6 +51,10 @@ class Social_Media_Sharing {
 
         # initialize the social media sharing display
         add_action( 'wp_head', array( $this, 'social_media_sharing_init') );
+
+        #initialize the social media sharing admin menu
+        add_action( 'admin_menu', array( $this, 'social_media_sharing_menu') );
+        
     }
 
     public function social_media_sharing_init() {
@@ -79,6 +83,21 @@ class Social_Media_Sharing {
 
         $this->get_facebook_opengraph($settings);
         $this->get_twitter_card_meta($settings);
+    }
+
+    public function social_media_sharing_menu() {
+        add_options_page( 'Social Media Sharing Options', 'Social Media Sharing', 'manage_options', 'social_media_sharing_slug', array( $this, 'social_media_sharing_options'));
+    }
+
+    protected function social_media_sharing_options() {
+        if ( !current_user_can( 'manage_options' ) ) {
+            wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+        } ?>
+        <div class="wrap">
+            <p>Here is where the form would go if I actually had options</p>
+        </div>
+
+        <?php
     }
 
     protected function get_facebook_opengraph($settings) { ?>
