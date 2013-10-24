@@ -42,7 +42,6 @@ class Social_Media_Sharing {
 
     protected function __construct() {
         # define defaults
-        define('TWITTER_HANDLE', '@YOUR_TWITTER_HANDLE');
         define('DEFAULT_SOCIAL_MEDIA_DESCRIPTION', 'DEFAULT DESCRIPTION');
         define('DEFAULT_SOCIAL_MEDIA_IMAGE', get_bloginfo('stylesheet_directory').'/images/DEFAULT_IMAGE.jpg' );
 
@@ -89,12 +88,43 @@ class Social_Media_Sharing {
         add_options_page( 'Social Media Sharing Options', 'Social Media Sharing', 'manage_options', 'social_media_sharing_slug', array( $this, 'social_media_sharing_options'));
     }
 
-    protected function social_media_sharing_options() {
+    public function social_media_sharing_options() {
         if ( !current_user_can( 'manage_options' ) ) {
             wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
-        } ?>
+        }
+
+        # load saved twitter handle from settings
+        $wp_option_value = get_option( 'social_media_sharing_twitter_handle' );
+
+
+        if ( isset($_POST['social_media_sharing_submit']) && $_POST['social_media_sharing_submit'] == 'Y') {
+            $wp_option_value = $_POST['social_media_sharing_twitter_handle'];
+
+            # remove @ sign in cause added by user. social media sharing will add this back later.
+            $wp_option_value = ltrim($wp_option_value, '@');
+
+            update_option( 'social_media_sharing_twitter_handle', $wp_option_value);
+
+            ?>
+            <div class="updated"><p><strong><?php _e('Social Media Sharing settings saved.', 'social_media_sharing_menu'); ?></strong></p></div>
+            <?php
+        }
+        ?>
+
         <div class="wrap">
-            <p>Here is where the form would go if I actually had options</p>
+            <?php screen_icon(); ?>
+            <h2><?php _e('Social Media Sharing Settings', 'social_media_sharing_menu')?></h2>
+            <form name="social_media_sharing_settings" method="post">
+                <input type="hidden" name="social_media_sharing_submit" value="Y">
+
+                <p><?php _e("Twitter Handle:", 'social_media_sharing_menu'); ?>
+                @<input type="text" name="social_media_sharing_twitter_handle" value="<?php echo $wp_option_value ?>" size="20">
+                </p><hr />
+
+                <p class="submit">
+                <input type="submit" name="Submit" class="button-primary" value="<?php esc_attr_e('Save Changes') ?>" />
+                </p>
+            </form>
         </div>
 
         <?php
@@ -110,10 +140,12 @@ class Social_Media_Sharing {
         <?php
     }
 
-    protected function get_twitter_card_meta($settings) { ?>
+    protected function get_twitter_card_meta($settings) { 
+        $twitter_handle = get_option( 'social_media_sharing_twitter_handle' );
+        ?>
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:site" content="<?= TWITTER_HANDLE ?>" />
-        <meta name="twitter:creator" content="<?= TWITTER_HANDLE ?>" />
+        <meta name="twitter:site" content="@<?= $twitter_handle ?>" />
+        <meta name="twitter:creator" content="@<?= $twitter_handle ?>" />
         <meta name="twitter:url" content="<?= $settings['url'] ?>" />
         <meta name="twitter:title" content="<?= $settings['title'] ?>" />
         <meta name="twitter:description" content="<?= $this->get_socialmedia_excerpt(25) ?>" />
