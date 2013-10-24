@@ -58,12 +58,13 @@ class Social_Media_Sharing {
     public function social_media_sharing_init() {
         global $post;
 
+        $thumbnail = wp_get_attachment_image_src( get_option( 'social_media_sharing_default_image_id'), 'facebook-thumbnail');
+        $og_image = $thumbnail[0];
+
         if ( is_single() || is_page()) {
             if ( has_post_thumbnail($post->ID) ) { 
                 $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID,'facebook-thumbnail') );
                 $og_image = $thumbnail[0];
-            } else {
-                $og_image = DEFAULT_SOCIAL_MEDIA_IMAGE;
             }
 
             $settings =  array (
@@ -75,7 +76,7 @@ class Social_Media_Sharing {
             $settings = array (
                 'url'   => $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
                 'title' => wp_title( '|', false, 'right'),
-                'image' => DEFAULT_SOCIAL_MEDIA_IMAGE,
+                'image' => $og_image,
             );
         }
 
@@ -85,6 +86,9 @@ class Social_Media_Sharing {
 
     public function social_media_sharing_menu() {
         add_options_page( 'Social Media Sharing Options', 'Social Media Sharing', 'manage_options', 'social_media_sharing_slug', array( $this, 'social_media_sharing_options'));
+
+        wp_enqueue_media();
+        wp_enqueue_script('social-media-sharing-image-upload', plugins_url('image-upload-helper.js', __FILE__), array('jquery'), '2013-10-22' );
     }
 
     public function social_media_sharing_options() {
@@ -95,11 +99,13 @@ class Social_Media_Sharing {
         # load saved twitter handle from settings
         $twitter_handle = get_option( 'social_media_sharing_twitter_handle' );
         $description = get_option( 'social_media_sharing_default_description' );
+        $default_image_id = get_option( 'social_media_sharing_default_image_id' );
 
 
-        if ( isset($_POST['social_media_sharing_submit']) && $_POST['social_media_sharing_submit'] == 'Y') {
+        if ( isset($_POST['social_media_sharing_submit']) && $_POST['social_media_sharing_submit'] == 'true') {
             $twitter_handle = $_POST['social_media_sharing_twitter_handle'];
             $description = $_POST['social_media_sharing_default_description'];
+            $default_image_id = $_POST['social_media_sharing_default_image_id'];
 
             # remove @ sign in cause added by user. social media sharing will add this back later.
             $twitter_handle = ltrim($twitter_handle, '@');
@@ -108,25 +114,39 @@ class Social_Media_Sharing {
 
             update_option( 'social_media_sharing_default_description', $description);
 
+            update_option( 'social_media_sharing_default_image_id', $default_image_id);
+
             ?>
             <div class="updated"><p><strong><?php _e('Social Media Sharing settings saved.', 'social_media_sharing_menu'); ?></strong></p></div>
             <?php
         }
+
         ?>
 
         <div class="wrap">
             <?php screen_icon(); ?>
             <h2><?php _e('Social Media Sharing Settings', 'social_media_sharing_menu')?></h2>
             <form name="social_media_sharing_settings" method="post">
-                <input type="hidden" name="social_media_sharing_submit" value="Y">
+                <input type="hidden" name="social_media_sharing_submit" value="true">
+                <input type="hidden" id="social_media_sharing_default_image_id" name="social_media_sharing_default_image_id" value="<?php echo $default_image_id; ?>">
 
                 <table class="form-table">
-                <tr>
-                    <th><?php _e("Twitter Handle", 'social_media_sharing_menu'); ?></th>
-                    <td>@<input type="text" name="social_media_sharing_twitter_handle" value="<?php echo $twitter_handle ?>" size="20"></td>
-                </tr>
-                    <th><?php _e("Default Description", 'social_media_sharing_menu'); ?></th>
-                    <td><textarea name="social_media_sharing_default_description" cols="23"><?php echo $description ?></textarea>
+                    <tr>
+                        <th><label for="social_media_sharing_twitter_handle"><?php _e("Twitter Handle", 'social_media_sharing_menu'); ?></label></th>
+                        <td>@<input type="text" id="social_media_sharing_twitter_handle" name="social_media_sharing_twitter_handle" value="<?php echo $twitter_handle ?>" size="30" /></td>
+                    </tr>
+                    <tr>
+                        <th><label for="social_media_sharing_default_description"><?php _e("Default Description", 'social_media_sharing_menu'); ?></label></th>
+                        <td><textarea id="social_media_sharing_default_description" name="social_media_sharing_default_description" cols="33"><?php echo $description ?></textarea></td>
+                    </tr>
+                    <tr>
+                        <th><label for="social_media_sharing_default_image"><?php _e("Default Social Media Thumbnail", 'social_media_sharing_menu'); ?></label></th>
+                        <td><div id="social_media_sharing_image"><?php echo wp_get_attachment_image($default_image_id, 'facebook-thumbnail'); ?></div><input id="social_media_sharing_upload_image_button" type="button" value="Upload Image" />
+                        <?php if ($default_image_id != '') : ?>
+                            <input id="social_media_sharing_remove_image_button" type="button" value="Remove Image" />
+                        <?php endif ?>
+                        </td>
+                    </tr>
                 </table>
 
                 <p class="submit">
