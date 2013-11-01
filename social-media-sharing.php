@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Social Media Sharing
- * Plugin URI: http://about.me/joverright
+ * Plugin URI: http://wordpress.org/support/plugin/social-media-sharing
  * Description: Adds Facebook OpenGraph and Twitter Card support to your website.
- * Version: 0.9 beta
+ * Version: 1.0
  * Author: Jesse Overright
- * Author URI: http://about.me/joverright
+ * Author URI: http://jesseoverright.com
  * License: GPL2
  */
 
