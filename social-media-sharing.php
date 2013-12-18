@@ -3,7 +3,7 @@
  * Plugin Name: Social Media Sharing
  * Plugin URI: http://wordpress.org/support/plugin/social-media-sharing
  * Description: Adds Facebook OpenGraph and Twitter Card support to your website.
- * Version: 1.0
+ * Version: 1.1
  * Author: Jesse Overright
  * Author URI: http://jesseoverright.com
  * License: GPL2
@@ -12,7 +12,7 @@
 /*  Copyright 2013  Jesse Overright  (email : jesseoverright@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License, version 2, as 
+    it under the terms of the GNU General Public License, version 2, as
     published by the Free Software Foundation.
 
     This program is distributed in the hope that it will be useful,
@@ -41,7 +41,10 @@ class Social_Media_Sharing {
     }
 
     protected function __construct() {
-        
+
+        if ( ! current_theme_supports( 'post-thumbnail' ) )
+            add_theme_support( 'post-thumbnail' );
+
         # set up facebook thumbnail size
         add_image_size( 'facebook-thumbnail', 300, 300);
 
@@ -50,7 +53,7 @@ class Social_Media_Sharing {
 
         #initialize the social media sharing admin menu
         add_action( 'admin_menu', array( $this, 'social_media_sharing_menu') );
-        
+
     }
 
     public function social_media_sharing_init() {
@@ -60,7 +63,7 @@ class Social_Media_Sharing {
         $title = (wp_title( '|', false, 'right') != '') ? wp_title( '|', false, 'right') : get_bloginfo('name');
 
         if ( is_single() || is_page()) {
-            if ( has_post_thumbnail($post->ID) ) { 
+            if ( has_post_thumbnail($post->ID) ) {
                 $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID,'facebook-thumbnail') );
             }
 
@@ -88,6 +91,10 @@ class Social_Media_Sharing {
     public function social_media_sharing_menu() {
         add_options_page( 'Social Media Sharing Options', 'Social Media Sharing', 'manage_options', 'social_media_sharing_slug', array( $this, 'social_media_sharing_options'));
 
+        add_action('admin_enqueue_scripts', array( $this, 'enqueue_social_media_sharing_menu_scripts') );
+    }
+
+    public function enqueue_social_media_sharing_menu_scripts() {
         wp_enqueue_media();
         wp_enqueue_script('social-media-sharing-image-upload', plugins_url('image-upload-helper.js', __FILE__), array('jquery'), '2013-10-22' );
     }
@@ -108,7 +115,7 @@ class Social_Media_Sharing {
             $description = $_POST['social_media_sharing_default_description'];
             $default_image_id = $_POST['social_media_sharing_default_image_id'];
 
-            # remove @ sign in cause added by user. social media sharing will add this back later.
+            # remove @ sign in case it's added by user. social media sharing will add this back later.
             $twitter_handle = ltrim($twitter_handle, '@');
 
             update_option( 'social_media_sharing_twitter_handle', $twitter_handle);
@@ -159,7 +166,7 @@ class Social_Media_Sharing {
         <?php
     }
 
-    protected function get_facebook_opengraph($settings) { 
+    protected function get_facebook_opengraph($settings) {
         if ($settings['image'] != '') : ?>
         <meta property="og:image" content="<?= $settings['image'] ?>" />
         <meta property="og:image:width" content="<?= $settings['width'] ?>" />
@@ -173,7 +180,7 @@ class Social_Media_Sharing {
         <?php
     }
 
-    protected function get_twitter_card_meta($settings) { 
+    protected function get_twitter_card_meta($settings) {
         $twitter_handle = get_option( 'social_media_sharing_twitter_handle' );
         ?>
         <meta name="twitter:card" content="summary" />
@@ -199,7 +206,7 @@ class Social_Media_Sharing {
             // remove any quotes
             $the_excerpt = str_replace('"','',$the_excerpt);
         }
-        
+
         if ($the_excerpt == '') $the_excerpt = get_option( 'social_media_sharing_default_description' );
         if ($the_excerpt == '') $the_excerpt = get_bloginfo( 'description' );
         return $the_excerpt;
